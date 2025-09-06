@@ -2,6 +2,7 @@ package com.skillsync.backend.controller;
 
 import com.skillsync.backend.model.Goal;
 import com.skillsync.backend.repository.GoalRepository;
+import com.skillsync.backend.service.OpenAIService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -13,6 +14,9 @@ import java.util.Optional;
 @RequestMapping("/api/goals")
 @CrossOrigin(origins = "*")
 public class GoalController {
+
+    @Autowired
+    private OpenAIService openAIService; // Only one instance
 
     @Autowired
     private GoalRepository goalRepository;
@@ -29,14 +33,14 @@ public class GoalController {
         return goalRepository.save(goal);
     }
 
-    // ✅ 3. Get goal by ID
+    // 3. Get goal by ID
     @GetMapping("/{id}")
     public ResponseEntity<Goal> getGoalById(@PathVariable Long id) {
         Optional<Goal> goal = goalRepository.findById(id);
         return goal.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
     }
 
-    // ✅ 4. Update goal by ID
+    // 4. Update goal by ID
     @PutMapping("/{id}")
     public ResponseEntity<Goal> updateGoal(@PathVariable Long id, @RequestBody Goal updatedGoal) {
         Optional<Goal> optionalGoal = goalRepository.findById(id);
@@ -50,7 +54,7 @@ public class GoalController {
         }
     }
 
-    // ✅ 5. Delete goal by ID
+    // 5. Delete goal by ID
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteGoal(@PathVariable Long id) {
         if (goalRepository.existsById(id)) {
@@ -60,4 +64,19 @@ public class GoalController {
             return ResponseEntity.notFound().build();
         }
     }
+
+   
+
+@GetMapping("/ai-response")
+public ResponseEntity<String> getAIResponse(@RequestParam("prompt") String prompt) {
+    try {
+        String aiText = openAIService.generateText(prompt);
+        return ResponseEntity.ok(aiText);
+    } catch (Exception e) {
+        e.printStackTrace();
+        return ResponseEntity.status(500).body("Error calling AI: " + e.getMessage());
+    }
+}
+
+
 }
